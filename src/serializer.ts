@@ -78,24 +78,3 @@ export class SQLSerializer implements vscode.NotebookSerializer {
     return new TextEncoder().encode(JSON.stringify(cellsData, null, 4));
   }
 }
-
-/**
- * TEMP. Just to test how it works
- */
-export class StatusBarProviderTemp
-  implements vscode.NotebookCellStatusBarItemProvider
-{
-  provideCellStatusBarItems(
-    cell: vscode.NotebookCell
-  ): vscode.NotebookCellStatusBarItem[] | undefined {
-    const openEach = new vscode.NotebookCellStatusBarItem(
-      `Test`,
-      vscode.NotebookCellStatusBarAlignment.Right
-    );
-    openEach.command = 'sqlnotebook.blah';
-    openEach.tooltip = `Temp tooltip`;
-
-    const items: vscode.NotebookCellStatusBarItem[] = [openEach];
-    return items;
-  }
-}

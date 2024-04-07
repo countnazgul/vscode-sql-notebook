@@ -60,13 +60,6 @@
         }
       ],
       "view/title": [],
-      "notebook/cell/title": [
-        {
-          "command": "sqlnotebook.blah",
-          "when": "notebookCellType == code",
-          "group": "inline@2"
-        }
-      ],
       "commandPalette": [
         {
           "command": "sqlnotebook.blah",
