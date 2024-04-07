@@ -4,3 +4,4 @@ node_modules
 sqls_bin
 sqls
 .direnv
+temp/

@@ -4,7 +4,7 @@ import { connectToDatabase, deleteConnectionConfiguration } from './commands';
 import { Pool } from './driver';
 import { activateFormProvider } from './form';
 import { SqlLspClient } from './lsp';
-import { SQLSerializer } from './serializer';
+import { StatusBarProviderTemp, SQLSerializer } from './serializer';
 import { SQLNotebookController } from './controller';
 
 export const notebookType = 'sql-notebook';
@@ -27,6 +27,13 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.window.registerTreeDataProvider(
     'sqlnotebook-connections',
     connectionsSidepanel
+  );
+
+  context.subscriptions.push(
+    vscode.notebooks.registerNotebookCellStatusBarItemProvider(
+      'sql-notebook',
+      new StatusBarProviderTemp()
+    )
   );
 
   activateFormProvider(context);
