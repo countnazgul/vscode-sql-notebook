@@ -1,8 +1,15 @@
 import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode';
+import { v4 as uuidv4 } from 'uuid';
 
-// Cell block delimiter
-const DELIMITER = '\n\n';
+interface SqlNotebookItem {
+  type: 'sql' | 'markdown' | string;
+  text: string;
+}
+
+interface SqlNotebook {
+  [k: string]: SqlNotebookItem;
+}
 
 export class SQLSerializer implements vscode.NotebookSerializer {
   async deserializeNotebook(
@@ -10,27 +17,36 @@ export class SQLSerializer implements vscode.NotebookSerializer {
     _token: vscode.CancellationToken
   ): Promise<vscode.NotebookData> {
     const str = new TextDecoder().decode(context);
-    const blocks = splitSqlBlocks(str);
 
-    const cells = blocks.map((query) => {
-      const isMarkdown = query.startsWith('/*markdown') && query.endsWith('*/');
-      if (isMarkdown) {
-        const lines = query.split('\n');
-        const innerMarkdown =
-          lines.length > 2 ? lines.slice(1, lines.length - 1).join('\n') : '';
-        return new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Markup,
-          innerMarkdown,
-          'markdown'
-        );
-      }
-
-      return new vscode.NotebookCellData(
-        vscode.NotebookCellKind.Code,
-        query,
-        'sql'
+    let jsonNotebook: SqlNotebook = {};
+    try {
+      jsonNotebook = JSON.parse(str);
+    } catch (e) {
+      vscode.window.showErrorMessage(
+        `Error while parsing the notebook! ${(e as Error).message}`
       );
+      return new vscode.NotebookData([]);
+    }
+
+    const cells = Object.entries(jsonNotebook).map(([key, value]) => {
+      const cellKind =
+        value.type == 'markdown'
+          ? vscode.NotebookCellKind.Markup
+          : vscode.NotebookCellKind.Code;
+
+      const cell = new vscode.NotebookCellData(
+        cellKind,
+        value.text,
+        value.type
+      );
+
+      cell.metadata = {
+        id: key,
+      };
+
+      return cell;
     });
+
     return new vscode.NotebookData(cells);
   }
 
@@ -38,31 +54,26 @@ export class SQLSerializer implements vscode.NotebookSerializer {
     data: vscode.NotebookData,
     _token: vscode.CancellationToken
   ): Promise<Uint8Array> {
-    return new TextEncoder().encode(
-      data.cells
-        .map(({ value, kind }) =>
-          kind === vscode.NotebookCellKind.Code
-            ? value
-            : `/*markdown\n${value}\n*/`
-        )
-        .join(DELIMITER)
-    );
-  }
-}
+    const cellKinds = {
+      1: 'markdown',
+      2: 'sql',
+    };
 
-function splitSqlBlocks(raw: string): string[] {
-  const blocks = [];
-  for (const block of raw.split(DELIMITER)) {
-    if (block.trim().length > 0) {
-      blocks.push(block);
-      continue;
-    }
-    if (blocks.length < 1) {
-      continue;
-    }
-    blocks[blocks.length - 1] += '\n\n';
+    const cellsData: SqlNotebook = {};
+
+    data.cells.map((d) => {
+      if (d.metadata) {
+        const id: string = !d.metadata.id ? uuidv4() : d.metadata.id;
+
+        cellsData[id] = {
+          type: cellKinds[d.kind],
+          text: d.value ? d.value : '',
+        };
+      }
+    });
+
+    return new TextEncoder().encode(JSON.stringify(cellsData, null, 4));
   }
-  return blocks;
 }
 
 /**
