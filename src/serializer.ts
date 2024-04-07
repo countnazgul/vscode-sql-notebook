@@ -18,6 +18,9 @@ export class SQLSerializer implements vscode.NotebookSerializer {
   ): Promise<vscode.NotebookData> {
     const str = new TextDecoder().decode(context);
 
+    // if empty file then return empty cell data array
+    if (str == '') return new vscode.NotebookData([]);
+
     let jsonNotebook: SqlNotebook = {};
     try {
       jsonNotebook = JSON.parse(str);
