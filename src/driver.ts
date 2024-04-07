@@ -191,7 +191,6 @@ function mysqlConn(conn: mysql.PoolConnection, queryTimeout: number): Conn {
         sql: q,
         timeout: queryTimeout,
       })) as any;
-      console.debug('mysql query result', { result, ok });
 
       if (!result.length) {
         // this is a singleton exec query result
@@ -272,7 +271,6 @@ function postgresConn(conn: pg.PoolClient): Conn {
   return {
     async query(q: string): Promise<ExecutionResult> {
       const response = (await conn.query(q)) as any as pg.QueryResult<any>[];
-      console.debug('pg query response', { response });
 
       // Typings for pg unfortunately miss that `query` may return an array of
       // results when the query strings contains multiple sql statements.

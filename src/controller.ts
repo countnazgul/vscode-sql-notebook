@@ -55,7 +55,6 @@ export class SQLNotebookController {
     }
     const conn = await globalConnPool.pool.getConnection();
     execution.token.onCancellationRequested(() => {
-      console.debug('got cancellation request');
       (async () => {
         conn.release();
         conn.destroy();
@@ -63,14 +62,11 @@ export class SQLNotebookController {
       })();
     });
 
-    console.debug('executing query', { query: rawQuery });
     let result: ExecutionResult;
     try {
       result = await conn.query(rawQuery);
-      console.debug('sql query completed', result);
       conn.release();
     } catch (err) {
-      console.debug('sql query failed', err);
       // @ts-ignore
       writeErr(execution, err.message);
       conn.release();

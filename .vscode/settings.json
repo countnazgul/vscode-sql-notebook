@@ -18,6 +18,8 @@
     "ovsx",
     "Sidepanel",
     "sqlnotebook",
-    "sqls"
+    "sqls",
+    "TIMESTAMPTZ",
+    "TIMETZ"
   ]
 }
