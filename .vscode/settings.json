@@ -12,9 +12,14 @@
     "cmoog",
     "dbconnection",
     "helpfeedback",
+    "keychain",
+    "keytar",
     "outfile",
     "ovsx",
     "Sidepanel",
-    "sqlnotebook"
+    "sqlnotebook",
+    "sqls",
+    "TIMESTAMPTZ",
+    "TIMETZ"
   ]
 }
