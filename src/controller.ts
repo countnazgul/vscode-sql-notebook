@@ -2,32 +2,35 @@ import * as vscode from 'vscode';
 import { ExecutionResult } from './driver';
 import { globalConnPool, notebookType } from './main';
 import { resultToMarkdownTable } from './markdown';
+import { CellHistoryStorage } from './history';
 
 export class SQLNotebookController {
   readonly controllerId = 'sql-notebook-executor';
   readonly notebookType = notebookType;
   readonly label = 'SQL Notebook';
   readonly supportedLanguages = ['sql'];
+  private histStorage: CellHistoryStorage;
 
   private readonly _controller: vscode.NotebookController;
   private _executionOrder = 0;
 
-  constructor() {
+  constructor(public readonly context: vscode.ExtensionContext) {
     this._controller = vscode.notebooks.createNotebookController(
       this.controllerId,
       this.notebookType,
-      this.label
+      this.label,
     );
 
     this._controller.supportedLanguages = this.supportedLanguages;
     this._controller.supportsExecutionOrder = true;
     this._controller.executeHandler = this._execute.bind(this);
+    this.histStorage = new CellHistoryStorage(context);
   }
 
   private async _execute(
     cells: vscode.NotebookCell[],
     _notebook: vscode.NotebookDocument,
-    _controller: vscode.NotebookController
+    _controller: vscode.NotebookController,
   ): Promise<void> {
     for (let cell of cells) {
       // run each cell sequentially, awaiting its completion
@@ -46,13 +49,15 @@ export class SQLNotebookController {
 
     // this is a sql block
     const rawQuery = cell.document.getText();
+    await this.histStorage.addHistoryEntryForCell(cell.metadata.id, rawQuery);
     if (!globalConnPool.pool) {
       writeErr(
         execution,
-        'No active connection found. Configure database connections in the SQL Notebook sidepanel.'
+        'No active connection found. Configure database connections in the SQL Notebook sidepanel.',
       );
       return;
     }
+
     const conn = await globalConnPool.pool.getConnection();
     execution.token.onCancellationRequested(() => {
       (async () => {
@@ -94,7 +99,7 @@ export class SQLNotebookController {
           outputs.push(json(item));
         }
         return outputs;
-      })
+      }),
     );
   }
 }
@@ -110,10 +115,10 @@ const { text, json } = vscode.NotebookCellOutputItem;
 
 function writeSuccess(
   execution: vscode.NotebookCellExecution,
-  outputs: vscode.NotebookCellOutputItem[][]
+  outputs: vscode.NotebookCellOutputItem[][],
 ) {
   execution.replaceOutput(
-    outputs.map((items) => new vscode.NotebookCellOutput(items))
+    outputs.map((items) => new vscode.NotebookCellOutput(items)),
   );
   execution.end(true, Date.now());
 }

@@ -4,8 +4,9 @@ import { connectToDatabase, deleteConnectionConfiguration } from './commands';
 import { Pool } from './driver';
 import { activateFormProvider } from './form';
 import { SqlLspClient } from './lsp';
-import { StatusBarProviderTemp, SQLSerializer } from './serializer';
+import { SQLSerializer } from './serializer';
 import { SQLNotebookController } from './controller';
+import { CellHistoryStorage } from './history';
 
 export const notebookType = 'sql-notebook';
 export const storageKey = 'sqlnotebook-connections';
@@ -16,33 +17,29 @@ export const globalConnPool: { pool: Pool | null } = {
 
 export const globalLspClient = new SqlLspClient();
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+  const history = new CellHistoryStorage(context);
+  history.validate();
+
   context.subscriptions.push(
     vscode.workspace.registerNotebookSerializer(
       notebookType,
-      new SQLSerializer()
-    )
+      new SQLSerializer(),
+    ),
   );
   const connectionsSidepanel = new SQLNotebookConnections(context);
   vscode.window.registerTreeDataProvider(
     'sqlnotebook-connections',
-    connectionsSidepanel
-  );
-
-  context.subscriptions.push(
-    vscode.notebooks.registerNotebookCellStatusBarItemProvider(
-      'sql-notebook',
-      new StatusBarProviderTemp()
-    )
+    connectionsSidepanel,
   );
 
   activateFormProvider(context);
 
-  context.subscriptions.push(new SQLNotebookController());
+  context.subscriptions.push(new SQLNotebookController(context));
 
   vscode.commands.registerCommand(
     'sqlnotebook.deleteConnectionConfiguration',
-    deleteConnectionConfiguration(context, connectionsSidepanel)
+    deleteConnectionConfiguration(context, connectionsSidepanel),
   );
 
   vscode.commands.registerCommand('sqlnotebook.refreshConnectionPanel', () => {
@@ -50,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
   vscode.commands.registerCommand(
     'sqlnotebook.connect',
-    connectToDatabase(context, connectionsSidepanel)
+    connectToDatabase(context, connectionsSidepanel),
   );
 }
 
