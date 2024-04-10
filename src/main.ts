@@ -7,6 +7,7 @@ import { SqlLspClient } from './lsp';
 import { SQLSerializer } from './serializer';
 import { SQLNotebookController } from './controller';
 import { CellHistoryStorage } from './history';
+import { HistoryStatusBarProvider } from './statusBars';
 
 export const notebookType = 'sql-notebook';
 export const storageKey = 'sqlnotebook-connections';
@@ -33,6 +34,13 @@ export async function activate(context: vscode.ExtensionContext) {
     connectionsSidepanel,
   );
 
+  context.subscriptions.push(
+    vscode.notebooks.registerNotebookCellStatusBarItemProvider(
+      'sql-notebook',
+      new HistoryStatusBarProvider(),
+    ),
+  );
+
   activateFormProvider(context);
 
   context.subscriptions.push(new SQLNotebookController(context));
@@ -40,6 +48,14 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand(
     'sqlnotebook.deleteConnectionConfiguration',
     deleteConnectionConfiguration(context, connectionsSidepanel),
+  );
+
+  vscode.commands.registerCommand(
+    'sqlnotebook.showCodeHistory',
+    async (context) => {
+      let a = await history.getHistoryForCell(context.metadata.id);
+      console.log(a);
+    },
   );
 
   vscode.commands.registerCommand('sqlnotebook.refreshConnectionPanel', () => {

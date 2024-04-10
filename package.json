@@ -5,8 +5,18 @@
   "description": "View SQL files as notebooks. Execute cells and view query output.",
   "icon": "media/logo128.png",
   "repository": {
-    "url": "https://github.com/cmoog/vscode-sql-notebook"
+    "url": "https://github.com/countnazgul/vscode-sql-notebook"
   },
+  "author": {
+    "name": "Stefan Stoychev",
+    "url": "https://sstoichev.eu"
+  },
+  "contributors": [
+    {
+      "name": "Charlie Moog",
+      "url": "https://github.com/cmoog"
+    }
+  ],
   "version": "0.7.0",
   "preview": false,
   "engines": {
@@ -62,7 +72,7 @@
       "view/title": [],
       "commandPalette": [
         {
-          "command": "sqlnotebook.blah",
+          "command": "sqlnotebook.showCodeHistory",
           "when": "notebookCellType == code"
         }
       ]
@@ -86,8 +96,8 @@
         "shortTitle": "Refresh"
       },
       {
-        "command": "sqlnotebook.blah",
-        "title": "Connect to Database",
+        "command": "sqlnotebook.showCodeHistory",
+        "title": "Code execution history",
         "icon": "media/dark/dbconnection.svg"
       }
     ],

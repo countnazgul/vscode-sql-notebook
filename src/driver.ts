@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 
 const supportedDrivers = ['mysql', 'postgres', 'mssql', 'sqlite'] as const;
 
-export type DriverKey = typeof supportedDrivers[number];
+export type DriverKey = (typeof supportedDrivers)[number];
 
 export interface Pool {
   getConnection: () => Promise<Conn>;
@@ -166,7 +166,7 @@ async function createMySQLPool({
         }
       },
     }),
-    queryTimeout
+    queryTimeout,
   );
 }
 
@@ -204,7 +204,7 @@ function mysqlConn(conn: mysql.PoolConnection, queryTimeout: number): Conn {
         // when we have `ResultSetHeader`, which is the result of an exec request,
         // we want to nest that into an array so that is display as a single row table
         return result.map((res: any) =>
-          res.length !== undefined ? res : [res]
+          res.length !== undefined ? res : [res],
         );
       }
       return [result];
@@ -282,6 +282,8 @@ function postgresConn(conn: pg.PoolClient): Conn {
         if (!rows.length) {
           return rowCount !== null ? [{ rowCount: rowCount }] : [];
         }
+
+        console.log(rows);
         return rows;
       });
     },
